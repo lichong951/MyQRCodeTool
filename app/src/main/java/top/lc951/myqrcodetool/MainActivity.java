@@ -1,10 +1,17 @@
 package top.lc951.myqrcodetool;
 
 import android.Manifest;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -18,11 +25,16 @@ import com.google.zxing.integration.android.IntentResult;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 
 public class MainActivity extends BaseActivity {
 
-    @BindView(R.id.tv_result)
-    TextView tvResult;
+    @BindView(R.id.et_result)
+    EditText etResult;
+    @BindView(R.id.btn_open)
+    Button btnOpen;
+    @BindView(R.id.btn_copy)
+    Button btnCopy;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,7 +94,7 @@ public class MainActivity extends BaseActivity {
 
     private void checkScanResult(int requestCode, int resultCode, @Nullable Intent data) {
         IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
-        if(null==result){
+        if (null == result) {
             return;
         }
 
@@ -92,7 +104,32 @@ public class MainActivity extends BaseActivity {
         }
 
         Toast.makeText(this, "Scanned: " + result.getContents(), Toast.LENGTH_LONG).show();
-        tvResult.setText(result.getContents());
+        etResult.setText(result.getContents());
     }
+
+    private ClipboardManager cm;
+    private ClipData mClipData;
+
+    @OnClick({R.id.btn_open, R.id.btn_copy})
+    public void onViewClicked(View view) {
+        Intent intent = new Intent();
+        switch (view.getId()) {
+            case R.id.btn_open:
+                intent.setData(Uri.parse(etResult.getText().toString().trim()));//Url 就是你要打开的网址
+                intent.setAction(Intent.ACTION_VIEW);
+                startActivity(intent); //启动浏览器
+                break;
+            case R.id.btn_copy:
+//获取剪贴板管理器：
+                cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+// 创建普通字符型ClipData
+                mClipData = ClipData.newPlainText("Label", etResult.getText().toString().trim());
+// 将ClipData内容放到系统剪贴板里。
+                cm.setPrimaryClip(mClipData);
+                showToast("复制成功");
+                break;
+        }
+    }
+
 
 }
